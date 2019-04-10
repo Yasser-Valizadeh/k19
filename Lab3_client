@@ -1,0 +1,163 @@
+function(spUtil) {
+	/* widget controller */
+	var c = this;
+
+	LL_to_TRS();
+
+	function LL_to_TRS() {
+		c.loading = true;
+		
+		var lat = parseFloat(c.data.lat, 10);
+		var lon = parseFloat(c.data.lng, 10);
+
+		var PLSS = {};
+		PLSS.state = "";
+		PLSS.meridian = "";
+		PLSS.township = "";
+		PLSS.township_direction = "";
+		PLSS.range = "";
+		PLSS.range_direction = "";
+		PLSS.first_division_type = "";
+		PLSS.first_division = "";
+		PLSS.second_division_type = "";
+		PLSS.second_division = "";
+
+		var xmlHttp = new XMLHttpRequest();
+
+		var params = '?lat='+lat+'&lon='+lon+'&units=DD&f=pjson';
+		var url = 'https://gis.blm.gov/arcgis/rest/services/' +
+				'Cadastral/BLM_Natl_PLSS_CadNSDI/MapServer/exts/' + 
+				'CadastralSpecialServices/GetTRS' + params;
+
+		xmlHttp.open('GET', url, /* async = */ true);
+		xmlHttp.responseType = 'json';
+		xmlHttp.timeout = 2000; // time in milliseconds
+
+		// Example:
+		// NV 21 0 38 0 N 0 560E 0 SN10 0 ASESW
+		xmlHttp.onload = function () {
+			// XMLHttpRequest finished.
+			try {
+				var response = xmlHttp.response;
+				if(isString(response)) {
+					response = JSON.parse(response);
+				} 
+				var PLSS_parse = response.features[0].attributes.landdescription;
+				var split_PLSS = PLSS_parse.split("");
+				PLSS.state = split_PLSS[0]+split_PLSS[1];
+				PLSS.meridian = split_PLSS[2]+split_PLSS[3];
+				PLSS.township = split_PLSS[5]+split_PLSS[6];
+				PLSS.township_direction = split_PLSS[8];
+				PLSS.range = split_PLSS[10]+split_PLSS[11];
+				PLSS.range_direction = split_PLSS[13];
+				PLSS.first_division_type = split_PLSS[15]+split_PLSS[16];
+				PLSS.first_division = split_PLSS[17]+split_PLSS[18];
+				PLSS.second_division_type = split_PLSS[20];
+				PLSS.second_division = "";
+				for (i = 21; i < split_PLSS.length; i++) {
+					if(split_PLSS[i]) {
+						PLSS.second_division = PLSS.second_division + split_PLSS[i];
+					}
+				}			
+
+				// SET FORM VALUES FOR TRS
+				setTRS(PLSS,lat,lon);
+				c.loading = false;
+
+			} catch (e) {
+				// the HTTP call failed likely due to no matching TRS
+				console.log(e);
+				spUtil.addInfoMessage("No matching Township Range Section found");
+			}  
+		};
+
+		xmlHttp.ontimeout = function (e) {
+			// XMLHttpRequest timed out.
+			// the HTTP call failed likely due to no matching TRS
+			console.log(e)
+			spUtil.addErrorMessage("HTTP REQUEST TIMED OUT")
+			console.log("Error: XMLHttpRequest timed out. URL: " + url);
+		};
+		xmlHttp.send( null );	
+	}
+
+	// Set the TRS data values
+	function setTRS(PLSS,lat,lon) {
+		c.data.state = PLSS.state;
+		c.data.principle_meridian = parseInt(PLSS.meridian,10)+"";
+		c.data.township = PLSS.township + PLSS.township_direction;
+		c.data.range = PLSS.range + PLSS.range_direction;
+		c.data.first_division_value = PLSS.first_division;
+		c.data.first_division_type = PLSS.first_division_type;
+		c.data.second_division_value = PLSS.second_division;
+		c.data.second_division_type = PLSS.second_division_type;
+
+		c.data.legal = "State: " + c.data.state + ", Meridian: " + c.data.principle_meridian +
+			", Township: " + c.data.township + ", Range: " + c.data.range;
+
+		if(c.data.first_division_type) {
+			c.data.legal = c.data.legal + ", First Div: " + c.data.first_division_type + "" + c.data.first_division_value;
+			if(c.data.second_division_type) {
+				c.data.legal = c.data.legal + ", Sec Div: " + c.data.second_division_type + "" + c.data.second_division_value;
+			}
+		}
+	}
+
+	//Section, Town, Range, First division type, First division value, Prime Meridian, Seconce divsion type, Second division value
+	function generatePLSS(S,T,R,FD_T,FD_V,PM,SD_T,SD_V) {
+
+		var T_D = T.slice(-1); // Township direction
+		T = T.slice(0,-1);		 // Township
+		var R_D = R.slice(-1); // Range direction 
+		R = R.slice(0,-1);		 // Range
+
+		// PLSS format expects values like 01, 02, 03 etc.
+		if(parseInt(PM) <= 9) {
+			PM = "0"+PM;
+		}
+
+		T = parseInt(T);
+		if(T<=9) {
+			T = "0" + T;
+		} else {
+			T = T+"";
+		}
+
+		R = parseInt(R);
+		if(R<=9){
+			R = "0" + R;
+		} else {
+			R = R+"";
+		}
+
+		FD_V = parseInt(FD_V);
+		if(FD_V<=9) {
+			FD_V = "0"+FD_V;
+		} else {
+			FD_V = FD_V+"";
+		}
+
+		var FD_SD_seperator = '0';
+		if(!FD_T) {
+			FD_T = "";
+			FD_V = "";
+			FD_SD_seperator = "";
+		}
+		if(!SD_T) {
+			SD_T = "";
+			SD_V = "";
+		}
+		var PLSS = S+PM+'0'+T+"0"+T_D+'0'+R+'0'+
+				R_D+'0'+FD_T+FD_V+FD_SD_seperator+SD_T+SD_V;
+		console.log(PLSS);
+		return PLSS;
+	}
+
+	function isString(x) {
+		return Object.prototype.toString.call(x) === "[object String]"
+	}
+	
+	c.save = function () {
+		c.server.update();
+	};
+}
