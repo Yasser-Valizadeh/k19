@@ -1,0 +1,4 @@
+function convertUTM() {
+	g_form.save();  //Save the record
+	g_navigation.open('sp?id=convert_latlng_to_utm&sys_id='+g_form.getUniqueValue(), '_blank'); //Redirct to the portal page to convert to UTM
+}
