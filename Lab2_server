@@ -1,0 +1,31 @@
+(function() {
+	/* populate the 'data' object */
+	/* e.g., data.table = $sp.getValue('table'); */
+
+	data.locRec = $sp.getParameter("sys_id");
+
+	if(input) { //Save the record
+		var gr = new GlideRecord("u_location");
+		if(gr.get(data.locRec)) {
+			gr.setValue("u_utm_easting", input.utm_easting);
+			gr.setValue("u_utm_hemisphere", input.utm_hemisphere);
+			gr.setValue("u_utm_northing", input.utm_northing);
+			gr.setValue("u_utm_zone", input.utm_zone);
+			
+			gr.setWorkflow(false); //No need to run the business rule
+			gr.update();
+		}
+
+
+	}else { //initialize
+
+
+		var gr = new GlideRecord("u_location");
+		if(gr.get(data.locRec)) {
+			data.lat = gr.getValue("u_latitude_dd");
+			data.lng = gr.getValue("u_longitude_dd");
+		}
+	}
+
+
+})();
