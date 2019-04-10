@@ -1,0 +1,16 @@
+<div>
+<!-- your widget template -->
+  This is where the Lat/Lng gets converted to TRS
+  <div>
+    Latitude: {{c.data.lat}}
+    <br>
+    Longitude: {{c.data.lng}}
+  </div>
+  
+  <div>
+    TRS Info : {{c.data.legal}}
+    
+  </div>
+
+<button type="button" class="btn btn-primary" ng-click="c.save()" ng-disabled=c.loading>Save</button>
+</div>
