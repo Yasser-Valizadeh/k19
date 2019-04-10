@@ -1,0 +1,45 @@
+(function() {
+	/* populate the 'data' object */
+	/* e.g., data.table = $sp.getValue('table'); */
+
+	data.locRec = $sp.getParameter("sys_id");
+
+	if(input) { //Save the record
+		var gr = new GlideRecord("u_location");
+		if(gr.get(data.locRec)) {
+
+			var gr_states = new GlideRecord('u_us_state');
+			if(gr_states.get('u_code', input.state)) {
+				gr.u_state = gr_states.getUniqueValue();
+			}
+
+			var gr_meridians = new GlideRecord('u_meridian');
+			if(gr_meridians.get('u_code', input.principle_meridian)) {
+				gr.u_principle_meridian = gr_meridians.getUniqueValue();
+			}
+
+			gr.u_township = input.township;
+			gr.u_range = input.range;
+			gr.u_first_division_type = input.first_division_type;
+			gr.u_first_division_value = input.first_division_value;
+			gr.u_second_division_type = input.second_division_type;
+			gr.u_second_division_value = input.second_division_value;
+
+
+			gr.setWorkflow(false); //No need to run the business rule
+			gr.update();
+		}
+
+
+	}else { //initialize
+
+
+		var gr = new GlideRecord("u_location");
+		if(gr.get(data.locRec)) {
+			data.lat = gr.getValue("u_latitude_dd");
+			data.lng = gr.getValue("u_longitude_dd");
+		}
+	}
+
+
+})();
