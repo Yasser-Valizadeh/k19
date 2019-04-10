@@ -1,0 +1,82 @@
+function($location) {
+	/* widget controller */
+	var c = this;
+
+
+	LL_to_UTM();
+
+	// Converts supplied long lat DD format to UTM format
+	function LL_to_UTM() {
+		var lat = parseFloat(c.data.lat, 10);
+		var lon = parseFloat(c.data.lng, 10);
+
+		var utm_coords = {};
+		utm_coords.zone = findUTMZoneNumber(lat,lon);
+		utm_coords.hemisphere = "Northern";
+
+		// proj4j setup and call
+		var sourceProjection = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs";
+		var targetProjection = "+proj=utm +zone="+utm_coords.zone+" +ellps=WGS84 +units=m +no_defs";
+		var projection_result = proj4(sourceProjection, targetProjection, [lon, lat]);
+
+		if (projection_result[1]<0){
+			utm_coords.hemisphere = "Southern";
+			utm_coords.northing = 10000000.0+parseFloat(projection_result[1]);
+		} else {
+			utm_coords.northing = projection_result[1];
+		}
+		utm_coords.easting = projection_result[0];
+
+		// ERROR UTM FORMAT INCORRECT
+		if(utm_coords.easting<0 || utm_coords.northing <0) {
+			console.log("UTM conversion failed. Proj4j output invalid UTM ranges")
+		} else {
+			// all good 
+			// SET FORM VALUES FOR UTM
+			setUTM(utm_coords);
+		}
+
+
+		return utm_coords;
+	}
+
+	// set UTM data values 
+	function setUTM(utm_coords) {
+
+		//change 0 to any postive integer to increase the number of decimal places.  3 is a common practice too.
+		c.data.utm_northing = utm_coords.northing.toFixed(0); 
+		c.data.utm_easting = utm_coords.easting.toFixed(0); 
+		c.data.utm_hemisphere = utm_coords.hemisphere;
+		c.data.utm_zone = utm_coords.zone;
+		c.data.utm = "Northing: " + c.data.utm_northing + ", Easting: " + c.data.utm_easting + 
+			", Zone: " + c.data.utm_zone + ", Hemisphere: " + c.data.utm_hemisphere;
+		
+		console.log(c.data.utm);
+	}
+
+	//Finds the UTM zone number using DD format long lat
+	function findUTMZoneNumber(lat,lon) {
+		var zone = Math.floor((lon + 180)/6) + 1;
+		if(lat >= 56.0 && lat < 64.0 && lon >=3.0 && lon < 12.0 ){
+			zone = 32;
+		}
+		if (lat >= 72.0 && lat < 84.0) {
+			if (lon >= 0.0 && lon < 9.0) {
+				zone = 31; 
+			} else if ( lon >= 9.0 && lon < 21.0 ) {
+				zone = 33;
+			} else if ( lon >= 21.0 && lon < 33.0 ) {
+				zone = 35;
+			} else if ( lon >= 33.0 && lon < 42.0) {
+				zone = 37;
+			}
+		}
+		return zone;
+	}
+	
+	c.save = function () {
+		c.server.update();
+	};
+
+
+}
