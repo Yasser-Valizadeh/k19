@@ -1,0 +1,16 @@
+<div>
+<!-- your widget template -->
+  This is where the Lat/Lng gets converted to UTM
+  <div>
+    Latitude: {{c.data.lat}}
+    <br>
+    Longitude: {{c.data.lng}}
+  </div>
+  
+  <div>
+    UTM Info : {{c.data.utm}}
+    
+  </div>
+
+<button type="button" class="btn btn-primary" ng-click="c.save()">Save</button>
+</div>  
