@@ -1,0 +1,53 @@
+(function executeRule(current, previous /*null when async*/) {
+
+	//Get the values of latitude/longitude fields
+	var latDeg = current.u_latitude_degree;
+	var latMin = current.u_latitude_min;
+	var latSec = current.u_latitude_sec;
+	var latDir = current.u_latitude_direction;
+
+	var lngDeg = current.u_longitude_degree;
+	var lngMin = current.u_longitude_min;
+	var lngSec = current.u_longitude_sec;
+	var lngDir = current.u_longitude_direction;
+
+	//Get the lat/lng in Decimal Degree format
+	current.u_latitude_dd = convertDMS_to_DD(latDeg, latMin, latSec, latDir);
+	current.u_longitude_dd = convertDMS_to_DD(lngDeg, lngMin, lngSec, lngDir);
+
+	//Get the lat/lng in Decimal Degree Second Format
+	current.u_latitude_dms = latDeg + "º " + latMin + "' " + 
+		latSec + "\" " + latDir;
+	current.u_longitude_dms = lngDeg + "º " + lngMin + "' " + 
+		lngSec + "\" " + lngDir;
+
+	//Get the lat/lng in Degree Minutes format
+	var DM_lat = convertDD_to_DM(current.u_latitude_dd);
+	current.u_latitude_dm = DM_lat.degrees + "º " + DM_lat.minutes.toFixed(5) + "' " + latDir;
+	var DM_lon = convertDD_to_DM(current.u_longitude_dd);
+	current.u_longitude_dm = DM_lon.degrees + "º " + DM_lon.minutes.toFixed(5) + "' " + lngDir;
+
+
+	// Converts degrees minutes seconds & direction to decimal degrees
+	function convertDMS_to_DD(degrees, minutes, seconds, direction) {
+		var deg = parseFloat(degrees);
+		var min = parseFloat(minutes);
+		var sec = parseFloat(seconds);
+		var DD_result = deg + (min/60) + (sec/3600);
+		if (direction == "S" || direction == "W") {
+			DD_result = DD_result * -1;
+		}
+		return DD_result;
+	}
+
+	// Converts decimal degrees to degrees decimal minutes
+	function convertDD_to_DM(DD) {
+		var DM = {};
+		var absolute = Math.abs(DD);
+		DM.degrees = Math.floor(absolute);
+		var decimals = (absolute - Math.floor(absolute)).toFixed(6);
+		DM.minutes = decimals*60;
+		return DM;
+	}
+
+})(current, previous);
