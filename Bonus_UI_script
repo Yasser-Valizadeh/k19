@@ -1,0 +1,19 @@
+var isMapInit = false;
+function loadMaps(key) {
+	
+	if (typeof g_google_maps_api_loaded == "undefined") {
+		spLoadScript('https://maps.googleapis.com/maps/api/js?callback=initMap&key='+key);
+		g_google_maps_api_loaded = true;
+	} else{
+		if(isMapInit){
+			CustomEvent.fireAll('map.initialized');
+		}
+
+	}
+}
+
+function initMap() {
+	isMapInit = true;
+	CustomEvent.fireAll('map.initialized');
+}
+
