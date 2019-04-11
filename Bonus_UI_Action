@@ -1,1 +1,8 @@
+function showMap() {
+	g_form.save();  //Save the record
+	g_navigation.open('sp?id=map_page&sys_id='+g_form.getUniqueValue(), '_blank'); //Redirct to the portal page to show the map
+}
+
+
+
 
