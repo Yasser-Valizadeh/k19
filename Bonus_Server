@@ -1,0 +1,16 @@
+(function() {
+	/* populate the 'data' object */
+	/* e.g., data.table = $sp.getValue('table'); */
+
+	data.locRec = $sp.getParameter("sys_id");
+
+	var gr = new GlideRecord("u_location");
+	if(gr.get(data.locRec)) {
+		data.lat = gr.getValue("u_latitude_dd") || "";
+		data.lng = gr.getValue("u_longitude_dd" || "");
+	}
+
+
+
+})();
+
