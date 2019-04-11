@@ -11,6 +11,10 @@ function() {
 	var map;
 
 	function getMap(){
+		
+		c.data.lat = parseFloat(c.data.lat);
+		c.data.lng = parseFloat(c.data.lng);
+		
 
 		map = new google.maps.Map(document.getElementById('map'), {
 			center: {lat: c.data.lat, lng: c.data.lng},
@@ -25,7 +29,7 @@ function() {
 	CustomEvent.observe('map.initialized', function() {
 		getMap();
 	});
-
-
 }
+
+
 
